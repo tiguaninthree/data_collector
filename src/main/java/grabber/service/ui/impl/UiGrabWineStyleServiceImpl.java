@@ -4,12 +4,14 @@ import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.Selenide;
 import com.codeborne.selenide.SelenideElement;
 import grabber.common.UiUtils;
+import grabber.common.Utils;
 import grabber.db.dao.WineDao;
 import grabber.model.Wine;
 import grabber.service.ui.UiGrabWineStyleService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,9 @@ public class UiGrabWineStyleServiceImpl implements UiGrabWineStyleService {
     private final static Logger LOGGER = LoggerFactory.getLogger(UiGrabWineStyleServiceImpl.class);
 
     @Autowired
+    WebDriver webDriver;
+
+    @Autowired
     WineDao wineDao;
 
     public void grabItems() {
@@ -38,9 +43,8 @@ public class UiGrabWineStyleServiceImpl implements UiGrabWineStyleService {
         do {
             items = $$(byClassName("item-block"));
             items.forEach(item -> {
-                item.$(byClassName("img-block")).click();
-                Wine wine = grabInfoFromPage();
-                //wineDao.create(wine);
+                Wine wine = grabInfoFromPage(item);
+                wineDao.create(wine);
             });
             processedCount += items.size();
             LOGGER.info("Обработанно результатов: " + processedCount + " из: " + itemsCount);
@@ -65,8 +69,10 @@ public class UiGrabWineStyleServiceImpl implements UiGrabWineStyleService {
     }
 
 
-    private Wine grabInfoFromPage() {
+    private Wine grabInfoFromPage(SelenideElement element) {
         Wine wine = new Wine();
+
+        webDriver.get(element.$(byClassName("item-header")).$(By.tagName("a")).getAttribute("href"));
 
         String country = $(byClassName("main-info")).$$(By.tagName("li")).findBy(text("Регион")).$$(By.tagName("a")).texts()
                 .stream().findFirst().get();
@@ -76,15 +82,17 @@ public class UiGrabWineStyleServiceImpl implements UiGrabWineStyleService {
                 .$(By.tagName("h1")));
         String grapes = UiUtils.checkAndExtractText($(byClassName("main-info")).$$(By.tagName("li")).findBy(text("Виноград")).$(byClassName("links")));
         String foodSuggestion = UiUtils.checkAndExtractText($$(byClassName("description-block")).findBy(text("Гастрономические сочетания")).$(By.tagName("p")));
-        String wineStyle = UiUtils.checkAndExtractText($$(byClassName("collapse-content-processed")).findBy(text("Интересные факты")));
+        String wineStyle = UiUtils.checkAndExtractText($$(byClassName("articles-container")).findBy(text("Интересные факты"))
+                .$(byClassName("collapse-content-processed")));
         Float alcoholContent = NumberUtils.createFloat(UiUtils.checkAndExtractText($(byClassName("main-info")).$$(By.tagName("li")).findBy(text("Крепость"))
                 .$(byClassName("links")))
                 .replaceAll("[^\\d,.]", ""));
-        Float aggregatedCritic = NumberUtils.createFloat(UiUtils.checkAndExtractText($(byClassName("ratingValue"))));
+        Float aggregatedCritic = NumberUtils.createFloat(UiUtils.checkAndExtractText($(byClassName("rating-text-big")).$(byClassName("text"))));
         Integer productionYear = NumberUtils.createInteger(StringUtils.defaultIfEmpty(UiUtils.checkAndExtractText($(byClassName("main-header"))
                 .$(By.tagName("h1")))
                 .replaceAll("[^\\d(17|20)\\d{2}$]", ""), null));
-        String wineBodyDescription = UiUtils.checkAndExtractText($$(By.tagName("li")).findBy(text("Тело/Насыщенность")));
+        String wineBodyDescription = Utils.nullableReplace(UiUtils.checkAndExtractText($$(byClassName("list-characteristics")).findBy(exist)
+                .$$(By.tagName("li")).findBy(text("Тело/Насыщенность"))), "Тело/Насыщенность:");
         String taste = UiUtils.checkAndExtractText($$(byClassName("description-block")).findBy(text("Вкус")).$(By.tagName("p")));
         String color = UiUtils.checkAndExtractText($$(byClassName("description-block")).findBy(text("Цвет")).$(By.tagName("p")));
         String aroma = UiUtils.checkAndExtractText($$(byClassName("description-block")).findBy(text("Аромат")).$(By.tagName("p")));
@@ -96,9 +104,10 @@ public class UiGrabWineStyleServiceImpl implements UiGrabWineStyleService {
                 .replaceAll("[^\\d]", ""));
         String vendorCode = StringUtils.defaultString($$(byClassName("bg-text")).findBy(attribute("title", "Артикул")).getText()
                 .replace("Артикул:", ""), null);
-        String colorDepth = $$(By.tagName("li")).findBy(text("Глубина цвета")).innerText();
-        String sortingTemperature = UiUtils.checkAndExtractText($$(byClassName("list-characteristics")).findBy(exist)
-                .$$(By.tagName("li")).findBy(text("Температура сервировки")));
+        String colorDepth = Utils.nullableReplace(UiUtils.checkAndExtractText($$(byClassName("list-characteristics")).findBy(exist)
+                .$$(By.tagName("li")).findBy(text("Глубина цвета"))), "Глубина цвета:");
+        String sortingTemperature = Utils.nullableReplace(UiUtils.checkAndExtractText($$(byClassName("list-characteristics")).findBy(exist)
+                .$$(By.tagName("li")).findBy(text("Температура сервировки"))), "Температура сервировки:");
         String manufacturerWebsite = UiUtils.checkAndExtractText($$(byClassName("list-characteristics")).findBy(text("Сайт производителя")).$(byClassName("text")));
 
         wine.setCountry(country);
@@ -128,7 +137,7 @@ public class UiGrabWineStyleServiceImpl implements UiGrabWineStyleService {
         wine.setSortingTemperature(sortingTemperature);
         wine.setManufacturerWebsite(manufacturerWebsite);
 
-        System.out.println(wine.toString());
+        LOGGER.info(wine.toString());
         Selenide.back();
 
         return wine;

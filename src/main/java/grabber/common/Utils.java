@@ -28,4 +28,16 @@ public class Utils {
         return result;
     }
 
+
+    public static String nullableReplace(String value, String replaceString) {
+        if (value != null) {
+            if (!value.isEmpty()) {
+                value = value.replace(replaceString, "").trim();
+            } else {
+                return null;
+            }
+        }
+        return value;
+    }
+
 }
