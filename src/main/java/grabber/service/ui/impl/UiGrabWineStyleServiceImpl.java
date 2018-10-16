@@ -171,7 +171,7 @@ public class UiGrabWineStyleServiceImpl implements UiGrabWineStyleService {
                 URL imageUrl = new URL(src);
                 BufferedImage img = ImageIO.read(imageUrl);
                 if (img != null) {
-                    String name = String.format("%s.%s", RandomStringUtils.randomAlphanumeric(16), "jpg");
+                    String name = String.format("%s.%s", RandomStringUtils.randomAlphanumeric(25), "jpg");
                     ImageIO.write(img, "jpg", new File(imgPath + name));
                     result = imgPath + name;
                 }
