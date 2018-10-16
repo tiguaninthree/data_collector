@@ -70,7 +70,7 @@ public class UiGrabWineStyleServiceImpl implements UiGrabWineStyleService {
         int wineCount = Integer.parseInt($$(byClassName("small"))
                 .findBy(text("Найдено"))
                 .getText()
-                .replaceAll("[\\D]", ""));
+                .replaceAll("[^\\d]", ""));
 
         LOGGER.info("Число найденых результатов: " + wineCount);
 
@@ -96,11 +96,11 @@ public class UiGrabWineStyleServiceImpl implements UiGrabWineStyleService {
                 .$(byClassName("collapse-content-processed")));
         Float alcoholContent = NumberUtils.createFloat(UiUtils.checkAndExtractText($(byClassName("main-info")).$$(By.tagName("li")).findBy(text("Крепость"))
                 .$(byClassName("links")))
-                .replaceAll("[\\D,.]", ""));
+                .replaceAll("[^\\d,.]", ""));
         Float aggregatedCritic = NumberUtils.createFloat(UiUtils.checkAndExtractText($(byClassName("rating-text-big")).$(byClassName("text"))));
         Integer productionYear = NumberUtils.createInteger(StringUtils.defaultIfEmpty(UiUtils.checkAndExtractText($(byClassName("main-header"))
                 .$(By.tagName("h1")))
-                .replaceAll("[\\D]", ""), null));
+                .replaceAll("[^\\d]", ""), null));
         String wineBodyDescription = Utils.nullableReplace(UiUtils.checkAndExtractText($$(byClassName("list-characteristics")).findBy(exist)
                 .$$(By.tagName("li")).findBy(text("Тело/Насыщенность"))), "Тело/Насыщенность:");
         String taste = UiUtils.checkAndExtractText($$(byClassName("description-block")).findBy(text("Вкус")).$(By.tagName("p")));
@@ -109,9 +109,9 @@ public class UiGrabWineStyleServiceImpl implements UiGrabWineStyleService {
         String wineType = UiUtils.checkAndExtractText($(byClassName("main-info")).$$(By.tagName("li")).findBy(text("Вино")).$(byClassName("links")));
         Float bottleVolume = NumberUtils.createFloat(UiUtils.checkAndExtractText($(byClassName("main-info")).$$(By.tagName("li")).findBy(text("Объем"))
                 .$(byClassName("links")))
-                .replaceAll("[\\D.,]", ""));
+                .replaceAll("[^\\d.,]", ""));
         Integer price = NumberUtils.createInteger(UiUtils.checkAndExtractText($(byClassName("price-container")).$(byClassName("price")))
-                .replaceAll("[\\D]", ""));
+                .replaceAll("[^\\d]", ""));
         String vendorCode = StringUtils.defaultString($$(byClassName("bg-text")).findBy(attribute("title", "Артикул")).getText()
                 .replace("Артикул:", ""), null);
         String colorDepth = Utils.nullableReplace(UiUtils.checkAndExtractText($$(byClassName("list-characteristics")).findBy(exist)
@@ -165,9 +165,10 @@ public class UiGrabWineStyleServiceImpl implements UiGrabWineStyleService {
     // TODO: потом как-то эти изображения нужно мигрировать на linux с заменой пути в БД...
     private String downloadImage() {
         String result = null;
+        SelenideElement image = $$(byClassName("img-container")).findBy(exist).$(By.tagName("img"));
         try {
-            String src = $$(byClassName("img-container")).findBy(exist).$(By.tagName("img")).getAttribute("src");
-            if (src != null && !src.isEmpty()) {
+            String src = UiUtils.isExists(image) ? image.getAttribute("src") : null;
+            if (src != null || !src.isEmpty()) {
                 URL imageUrl = new URL(src);
                 BufferedImage img = ImageIO.read(imageUrl);
                 if (img != null) {
