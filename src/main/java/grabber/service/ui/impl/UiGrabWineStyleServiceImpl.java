@@ -8,6 +8,7 @@ import grabber.common.Utils;
 import grabber.db.dao.WineDao;
 import grabber.model.Wine;
 import grabber.service.ui.UiGrabWineStyleService;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.openqa.selenium.By;
@@ -15,7 +16,13 @@ import org.openqa.selenium.WebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.net.URL;
 
 import static com.codeborne.selenide.Condition.*;
 import static com.codeborne.selenide.Selectors.byClassName;
@@ -33,13 +40,15 @@ public class UiGrabWineStyleServiceImpl implements UiGrabWineStyleService {
     @Autowired
     WineDao wineDao;
 
+    @Value("${image.download.path.winestyle}")
+    String imgPath;
+
     public void grabItems() {
         int itemsCount = selectFilterSettings();
         int processedCount = 0;
         SelenideElement parentContainer = $(byClassName("items-container"));
         ElementsCollection items;
 
-        //TODO: логика сбора данных переведена на постраничную, сделать простой счетчик вин + вывод текущей страницы.
         do {
             items = $$(byClassName("item-block"));
             items.forEach(item -> {
@@ -61,7 +70,7 @@ public class UiGrabWineStyleServiceImpl implements UiGrabWineStyleService {
         int wineCount = Integer.parseInt($$(byClassName("small"))
                 .findBy(text("Найдено"))
                 .getText()
-                .replaceAll("[^\\d]", ""));
+                .replaceAll("[\\D]", ""));
 
         LOGGER.info("Число найденых результатов: " + wineCount);
 
@@ -72,6 +81,7 @@ public class UiGrabWineStyleServiceImpl implements UiGrabWineStyleService {
     private Wine grabInfoFromPage(SelenideElement element) {
         Wine wine = new Wine();
 
+        // получение ссылки на вино из списка с переходом по ней
         webDriver.get(element.$(byClassName("item-header")).$(By.tagName("a")).getAttribute("href"));
 
         String country = $(byClassName("main-info")).$$(By.tagName("li")).findBy(text("Регион")).$$(By.tagName("a")).texts()
@@ -86,11 +96,11 @@ public class UiGrabWineStyleServiceImpl implements UiGrabWineStyleService {
                 .$(byClassName("collapse-content-processed")));
         Float alcoholContent = NumberUtils.createFloat(UiUtils.checkAndExtractText($(byClassName("main-info")).$$(By.tagName("li")).findBy(text("Крепость"))
                 .$(byClassName("links")))
-                .replaceAll("[^\\d,.]", ""));
+                .replaceAll("[\\D,.]", ""));
         Float aggregatedCritic = NumberUtils.createFloat(UiUtils.checkAndExtractText($(byClassName("rating-text-big")).$(byClassName("text"))));
         Integer productionYear = NumberUtils.createInteger(StringUtils.defaultIfEmpty(UiUtils.checkAndExtractText($(byClassName("main-header"))
                 .$(By.tagName("h1")))
-                .replaceAll("[^\\d(17|20)\\d{2}$]", ""), null));
+                .replaceAll("[\\D]", ""), null));
         String wineBodyDescription = Utils.nullableReplace(UiUtils.checkAndExtractText($$(byClassName("list-characteristics")).findBy(exist)
                 .$$(By.tagName("li")).findBy(text("Тело/Насыщенность"))), "Тело/Насыщенность:");
         String taste = UiUtils.checkAndExtractText($$(byClassName("description-block")).findBy(text("Вкус")).$(By.tagName("p")));
@@ -99,9 +109,9 @@ public class UiGrabWineStyleServiceImpl implements UiGrabWineStyleService {
         String wineType = UiUtils.checkAndExtractText($(byClassName("main-info")).$$(By.tagName("li")).findBy(text("Вино")).$(byClassName("links")));
         Float bottleVolume = NumberUtils.createFloat(UiUtils.checkAndExtractText($(byClassName("main-info")).$$(By.tagName("li")).findBy(text("Объем"))
                 .$(byClassName("links")))
-                .replaceAll("[^\\d.,]", ""));
+                .replaceAll("[\\D.,]", ""));
         Integer price = NumberUtils.createInteger(UiUtils.checkAndExtractText($(byClassName("price-container")).$(byClassName("price")))
-                .replaceAll("[^\\d]", ""));
+                .replaceAll("[\\D]", ""));
         String vendorCode = StringUtils.defaultString($$(byClassName("bg-text")).findBy(attribute("title", "Артикул")).getText()
                 .replace("Артикул:", ""), null);
         String colorDepth = Utils.nullableReplace(UiUtils.checkAndExtractText($$(byClassName("list-characteristics")).findBy(exist)
@@ -109,6 +119,7 @@ public class UiGrabWineStyleServiceImpl implements UiGrabWineStyleService {
         String sortingTemperature = Utils.nullableReplace(UiUtils.checkAndExtractText($$(byClassName("list-characteristics")).findBy(exist)
                 .$$(By.tagName("li")).findBy(text("Температура сервировки"))), "Температура сервировки:");
         String manufacturerWebsite = UiUtils.checkAndExtractText($$(byClassName("list-characteristics")).findBy(text("Сайт производителя")).$(byClassName("text")));
+        String imagePath = downloadImage();
 
         wine.setCountry(country);
         wine.setRegion(region);
@@ -136,6 +147,7 @@ public class UiGrabWineStyleServiceImpl implements UiGrabWineStyleService {
         wine.setColorDepth(colorDepth);
         wine.setSortingTemperature(sortingTemperature);
         wine.setManufacturerWebsite(manufacturerWebsite);
+        wine.setImagePath(imagePath);
 
         LOGGER.info(wine.toString());
         Selenide.back();
@@ -148,5 +160,25 @@ public class UiGrabWineStyleServiceImpl implements UiGrabWineStyleService {
         if (confirmAgePopup.is(visible)) {
             confirmAgePopup.$$(byClassName("button")).findBy(text("Мне исполнилось 18 лет")).click();
         }
+    }
+
+    // TODO: потом как-то эти изображения нужно мигрировать на linux с заменой пути в БД...
+    private String downloadImage() {
+        String result = null;
+        try {
+            String src = $$(byClassName("img-container")).findBy(exist).$(By.tagName("img")).getAttribute("src");
+            if (src != null && !src.isEmpty()) {
+                URL imageUrl = new URL(src);
+                BufferedImage img = ImageIO.read(imageUrl);
+                if (img != null) {
+                    String name = String.format("%s.%s", RandomStringUtils.randomAlphanumeric(16), "jpg");
+                    ImageIO.write(img, "jpg", new File(imgPath + name));
+                    result = imgPath + name;
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+        }
+        return result;
     }
 }

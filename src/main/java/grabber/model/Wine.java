@@ -32,6 +32,7 @@ public class Wine {
     private String colorDepth;
     private String manufacturerWebsite;
     private String sortingTemperature;
+    private String imagePath;
 
 
     public Long getId() {
@@ -248,6 +249,14 @@ public class Wine {
 
     public void setSortingTemperature(String sortingTemperature) {
         this.sortingTemperature = sortingTemperature;
+    }
+
+    public String getImagePath() {
+        return imagePath;
+    }
+
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
     }
 
     @Override

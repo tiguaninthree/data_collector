@@ -24,14 +24,16 @@ public class WineDaoImpl implements WineDao {
                 "AGGREGATED_CRITIC, SOURCE_WEBSITE, WEBSITE_WINE_ID, PRODUCTION_YEAR,\n" +
                 "WINE_BODY, WINE_BODY_DESCRIPTION, ACIDITY, ACIDITY_DESCRIPTION,\n" +
                 "TASTE, COLOR, AROMA, WINE_TYPE, BOTTLE_VOLUME, PRICE, VENDOR_CODE,\n" +
-                "COLOR_DEPTH, SORTING_TEMPERATURE, MANUFACTURER_WEBSITE)\n" +
+                "COLOR_DEPTH, SORTING_TEMPERATURE, MANUFACTURER_WEBSITE,\n" +
+                "IMAGE_PATH)\n" +
                 "VALUES(" +
                 ":country, :region, :manufacturer, :wine_name,\n" +
                 ":grapes, :food_suggestion, :wine_style, :alcohol_content,\n" +
                 ":aggregated_critic, :source_website, :website_wine_id, :production_year,\n" +
                 ":wine_body, :wine_body_description, :acidity, :acidity_description,\n" +
                 ":taste, :color, :aroma, :wine_type, :bottle_volume, :price, :vendor_code,\n" +
-                ":color_depth, :sorting_temperature, :manufacturer_website)";
+                ":color_depth, :sorting_temperature, :manufacturer_website,\n" +
+                ":image_path)";
         jdbcTemplate.update(query, new MapSqlParameterSource()
                 .addValue("country", wine.getCountry())
                 .addValue("region", wine.getRegion())
@@ -55,10 +57,11 @@ public class WineDaoImpl implements WineDao {
                 .addValue("wine_type", wine.getWineType())
                 .addValue("bottle_volume", wine.getBottleVolume())
                 .addValue("price", wine.getPrice())
-                .addValue("vendor_code", wine.getBottleVolume())
+                .addValue("vendor_code", wine.getVendorCode())
                 .addValue("color_depth", wine.getColorDepth())
                 .addValue("sorting_temperature", wine.getSortingTemperature())
-                .addValue("manufacturer_website", wine.getManufacturerWebsite()));
+                .addValue("manufacturer_website", wine.getManufacturerWebsite())
+                .addValue("image_path", wine.getImagePath()));
     }
 
 }
