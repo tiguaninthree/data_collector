@@ -76,7 +76,6 @@ public class WineDaoImpl implements WineDao {
                             .addValue("color_depth", wine.getColorDepth())
                             .addValue("sorting_temperature", wine.getSortingTemperature())
                             .addValue("manufacturer_website", wine.getManufacturerWebsite()),
-//                            .addValue("image_path", wine.getImagePath()),
                     keyHolder, new String[]{"id"});
 
             // add image path to linked table
