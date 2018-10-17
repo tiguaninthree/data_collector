@@ -10,4 +10,6 @@ public interface WineDao {
 
     List<Wine> findByWineName(String name);
 
+    void saveImage(Wine wine);
+
 }

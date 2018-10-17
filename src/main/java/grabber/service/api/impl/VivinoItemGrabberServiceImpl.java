@@ -72,7 +72,9 @@ public class VivinoItemGrabberServiceImpl implements VivinoItemGrabberService {
                 });
 
             }
-        } while (pageNum != 2);
+
+            //TODO: отладочный костыль. Заменить проверкой на дублирование (после 81 страницы)!
+        } while (pageNum != 10);
 
     }
 

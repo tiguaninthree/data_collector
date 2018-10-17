@@ -1,5 +1,6 @@
 package grabber.common;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Collection;
@@ -38,6 +39,20 @@ public class Utils {
             }
         }
         return value;
+    }
+
+    public static String nullableGetTextFromJsonNode(JsonNode node, boolean regexProcessing) {
+        String result = null;
+        if (node != null) {
+            if (!node.asText().isEmpty()) {
+                    result = node.asText();
+                    if (regexProcessing) {
+                        result = result.replaceAll("[^\\d.,]", "").trim();
+                        result = result.isEmpty() ? null : result;
+                    }
+            }
+        }
+        return result;
     }
 
 }

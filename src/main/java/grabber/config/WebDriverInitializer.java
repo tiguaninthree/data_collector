@@ -1,7 +1,7 @@
 package grabber.config;
 
-import com.codeborne.selenide.Selenide;
 import com.codeborne.selenide.WebDriverRunner;
+import grabber.service.api.VivinoItemGrabberService;
 import grabber.service.ui.UiGrabWineStyleService;
 import org.openqa.selenium.WebDriver;
 import org.slf4j.Logger;
@@ -33,17 +33,17 @@ public class WebDriverInitializer {
     @Autowired
     UiGrabWineStyleService uiGrabWineStyleService;
 
-//    @Autowired
-//    VivinoItemGrabberService vivinoItemGrabberService;
+    @Autowired
+    VivinoItemGrabberService vivinoItemGrabberService;
 
     @PostConstruct
     public void setUp() {
         LOGGER.info("WebDriver start up...");
         webDriver.manage().window().maximize();
         WebDriverRunner.setWebDriver(webDriver);
-        Selenide.open(url);
-        uiGrabWineStyleService.grabItems();
-//        vivinoItemGrabberService.grabAllWineTypes();
+       /* Selenide.open(url);
+        uiGrabWineStyleService.grabItems();*/
+        vivinoItemGrabberService.grabAllWineTypes();
     }
 
     @PreDestroy
