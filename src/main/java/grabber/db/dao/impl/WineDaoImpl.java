@@ -78,7 +78,7 @@ public class WineDaoImpl implements WineDao {
 
     @Override
     public List<Wine> findByWineName(String name) {
-        String query = "SELECT * FROM WINE_GRABBING." + table + " WHERE VENDOR_CODE LIKE :wine_name";
+        String query = "SELECT * FROM WINE_GRABBING." + table + " WHERE WINE_NAME LIKE :wine_name";
         final SqlParameterSource params = new MapSqlParameterSource("wine_name", "%" + name + "%");
         return jdbcTemplate.query(query, params, MAPPER);
     }
