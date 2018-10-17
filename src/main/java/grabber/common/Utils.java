@@ -41,10 +41,14 @@ public class Utils {
         return value;
     }
 
+    /**
+     * Проверка на наличие значений в JSON.
+     * @param regexProcessing - нужно оставить только цифры?
+     */
     public static String nullableGetTextFromJsonNode(JsonNode node, boolean regexProcessing) {
         String result = null;
         if (node != null) {
-            if (!node.asText().isEmpty()) {
+            if (!node.asText().isEmpty() && !node.isNull()) {
                     result = node.asText();
                     if (regexProcessing) {
                         result = result.replaceAll("[^\\d.,]", "").trim();
