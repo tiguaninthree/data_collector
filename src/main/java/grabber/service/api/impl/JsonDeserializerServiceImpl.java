@@ -90,6 +90,7 @@ public class JsonDeserializerServiceImpl implements JsonDeserializerService {
         return result;
     }
 
+    //TODO: костыль. Сделать общий метод для скачивания изображений.
     @SuppressWarnings("Duplicates")
     private String downloadImage(String srcUrl) {
         String result = null;
