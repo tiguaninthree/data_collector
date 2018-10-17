@@ -41,7 +41,6 @@ public class WineDaoImpl implements WineDao {
                     "WINE_BODY, WINE_BODY_DESCRIPTION, ACIDITY, ACIDITY_DESCRIPTION,\n" +
                     "TASTE, COLOR, AROMA, WINE_TYPE, BOTTLE_VOLUME, PRICE, VENDOR_CODE,\n" +
                     "COLOR_DEPTH, SORTING_TEMPERATURE, MANUFACTURER_WEBSITE)\n" +
-                    //"IMAGE_PATH)\n" +
                     "VALUES(" +
                     ":country, :region, :manufacturer, :wine_name,\n" +
                     ":grapes, :food_suggestion, :wine_style, :alcohol_content,\n" +
@@ -49,7 +48,6 @@ public class WineDaoImpl implements WineDao {
                     ":wine_body, :wine_body_description, :acidity, :acidity_description,\n" +
                     ":taste, :color, :aroma, :wine_type, :bottle_volume, :price, :vendor_code,\n" +
                     ":color_depth, :sorting_temperature, :manufacturer_website)";
-//                    ":image_path)";
             KeyHolder keyHolder = new GeneratedKeyHolder();
             jdbcTemplate.update(query, new MapSqlParameterSource()
                             .addValue("country", wine.getCountry())

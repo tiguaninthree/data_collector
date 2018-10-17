@@ -79,6 +79,7 @@ public class VivinoItemGrabberServiceImpl implements VivinoItemGrabberService {
     }
 
     @Override
+    // TODO: вина ищутся по отдельным фильтрам - действует ограничение.
     public void grabAllWineTypes() {
         grabItemsForWineType(redWine);
         grabItemsForWineType(whiteWine);
