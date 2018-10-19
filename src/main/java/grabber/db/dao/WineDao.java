@@ -12,4 +12,6 @@ public interface WineDao {
 
     void saveImage(Wine wine);
 
+    boolean existsByWebsiteId(long id);
+
 }

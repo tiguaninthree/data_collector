@@ -56,6 +56,7 @@ public class JsonDeserializerServiceImpl implements JsonDeserializerService {
         String acidityDescription = Utils.nullableGetTextFromJsonNode(node.findPath("style").findValue("acidity_description"), false);
         String wineType = Utils.nullableGetTextFromJsonNode(node.findPath("style").findValue("varietal_name"), false);
         String imagePath = downloadImage(this.imageSorting(node.findPath("image").findPath("variations")));
+        Long websiteWineId = NumberUtils.createLong(Utils.nullableGetTextFromJsonNode(node.findPath("vintage").findValue("id"), true));
 
         wine.setCountry(country);
         wine.setRegion(region);
@@ -72,6 +73,7 @@ public class JsonDeserializerServiceImpl implements JsonDeserializerService {
         wine.setAcidityDescription(acidityDescription);
         wine.setWineType(wineType);
         wine.setImagePath(imagePath);
+        wine.setWebSiteWineId(websiteWineId);
 
         return wine;
 

@@ -2,6 +2,8 @@ package grabber.db.dao.impl;
 
 import grabber.db.dao.WineDao;
 import grabber.model.Wine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.RowMapper;
@@ -18,6 +20,8 @@ import java.util.List;
 @Component
 public class WineDaoImpl implements WineDao {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(WineDaoImpl.class);
+
     private final String table = "TEST_WINE_DEV";
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
@@ -32,8 +36,9 @@ public class WineDaoImpl implements WineDao {
     @Transactional
     public void create(Wine wine) {
         // TODO: данные на сайтах разные (например где-то нет id с сайта) поэтому нужна универсальная проверка на наличиее записи!
-        List<Wine> w = this.findByWineName(wine.getWineName());
-        if (w.isEmpty()) {
+      //  List<Wine> w = this.findByWineName(wine.getWineName());
+      //  if (w.isEmpty()) {
+        if (!existsByWebsiteId(wine.getWebSiteWineId())) {
             String query = "INSERT INTO WINE_GRABBING." + table + "(" +
                     "COUNTRY, REGION, MANUFACTURER, WINE_NAME,\n" +
                     "GRAPES, FOOD_SUGGESTION, WINE_STYLE, ALCOHOL_CONTENT,\n" +
@@ -82,27 +87,39 @@ public class WineDaoImpl implements WineDao {
             long id = keyHolder.getKey().longValue();
             wine.setId(id);
             this.saveImage(wine);
+        } else {
+            LOGGER.info("Row with website ID: " + wine.getWebSiteWineId() + " is already exists!");
         }
     }
 
     @Override
     public List<Wine> findByWineName(String name) {
-        String query = "SELECT * FROM WINE_GRABBING." + table + " WHERE WINE_NAME LIKE :wine_name";
+        String sql = "SELECT * FROM WINE_GRABBING." + table + " WHERE WINE_NAME LIKE :wine_name";
         final SqlParameterSource params = new MapSqlParameterSource("wine_name", "%" + name + "%");
-        return jdbcTemplate.query(query, params, MAPPER);
+        return jdbcTemplate.query(sql, params, MAPPER);
     }
 
     public void saveImage(Wine wine) {
         if (wine.getId() != null) {
-            String query = "INSERT INTO WINE_GRABBING.IMAGE_LINK(" +
+            String sql = "INSERT INTO WINE_GRABBING.IMAGE_LINK(" +
                     "WINE_ID, STORE_PATH)\n" +
                     "VALUES(" +
                     ":wine_id, :store_path)";
 
-            jdbcTemplate.update(query, new MapSqlParameterSource()
+            jdbcTemplate.update(sql, new MapSqlParameterSource()
             .addValue("wine_id", wine.getId())
             .addValue("store_path", wine.getImagePath()));
         }
+    }
+
+    //TODO: null тут все сломает..
+    @Override
+    public boolean existsByWebsiteId(long id) {
+        String sql = "SELECT EXISTS(" +
+                "SELECT * FROM WINE_GRABBING.TEST_WINE_DEV twd\n" +
+                "WHERE twd.WEBSITE_WINE_ID = :website_wine_id)";
+        final SqlParameterSource param = new MapSqlParameterSource("website_wine_id", id);
+        return jdbcTemplate.queryForObject(sql, param, Boolean.class);
     }
 
 
